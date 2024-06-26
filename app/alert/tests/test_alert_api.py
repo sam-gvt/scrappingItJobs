@@ -72,13 +72,34 @@ class PrivateAlertAPITests(TestCase):
         alert = Alert.objects.get(id=res.data['id'])
         self.assertEqual(res.data['title'], alert.title)
 
+    def test_create_alert_with_other_id_user_returns_error(self):
+
+        user2 = get_user_model().objects.create_user(username='user2', password='testpas1234!%')
+        self.client.force_authenticate(user=user2)
+
+        payload = {
+            'title': 'Sample Title',
+            'id_user': self.user.id
+        }
+        res = self.client.post(ALERT_URL, payload)
+
+        print(res)
 
     def test_delete_alert(self):
 
         alert = create_alert(user=self.user)
 
         url = reverse('alert:alert-detail', args=[alert.id])
-        res = self.client.delete(ALERT_URL, )
+        res = self.client.delete(url)
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Alert.objects.filter(id=alert.id).exists())
+
+
+    def test_update_iduser_returns_error(self):
+        pass
+
+    def test_update_alert_error(self):
+        pass
 
 
 

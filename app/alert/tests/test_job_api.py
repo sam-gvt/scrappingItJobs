@@ -90,6 +90,17 @@ class JobAPITest(TestCase):
 
         self.assertEqual(res.data, serializer.data)
 
+    def test_get_other_users_job_error(self):
+        job = create_job(self.alert)
+
+        user2 = get_user_model().objects.create_user(username='user2', password='testpass345!')
+        self.client.force_authenticate(user2)
+
+        url = url_detail_job(job.id)
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
 
     def test_update_job(self):
         job = create_job(self.alert)
@@ -135,16 +146,16 @@ class JobAPITest(TestCase):
         self.assertEqual(job.localization, original_localization)
 
 
-    def test_update_alert_returns_error(self):
-        pass
-
     def test_delete_job(self):
-        pass
+        job = create_job(self.alert)
+        url = url_detail_job(job.id)
+        res = self.client.delete(url)
 
-    def test_get_other_users_job_error(self):
-        pass
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Job.objects.filter(id=job.id).exists())
 
-    # completer ces tests
-    # ajouter tests en rapport a techno
+
+
+
 
 
