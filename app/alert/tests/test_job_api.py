@@ -1,4 +1,5 @@
 
+import pprint
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -6,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Job, Alert
+from core.models import Job, Alert, Techno
 
 from alert.serializers import (
     JobSerializer,
@@ -156,6 +157,62 @@ class JobAPITest(TestCase):
 
 
 
+    def test_create_job_with_new_technos(self):
 
+        payload = {
+            'title':'Web developer',
+            'tjm':250,
+            'localization':'Lyon',
+            'experience':'2-3 ans',
+            'esn':'Sam company',
+            'date':"2024-06-19",
+            'mission_duration':'6 mois',
+            'id_alert' : self.alert.id,
+            'technos': [{'name': 'React Native'}, {'name': 'C#'}],
+        }
+
+        res = self.client.post(JOB_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        job = Job.objects.get(id_alert=self.alert.id)
+
+        self.assertEqual(job.technos.count(), 2)
+        for techno in payload['technos']:
+            exists = job.technos.filter(
+                name=techno['name'],
+            ).exists()
+            self.assertTrue(exists)
+
+
+    def test_create_job_with_existing_techno(self):
+        techno_django = Techno.objects.create(name='Django')
+        payload = {
+            'title':'Django developer',
+            'tjm':250,
+            'localization':'Lyon',
+            'experience':'2-3 ans',
+            'esn':'Sam company',
+            'date':"2024-06-19",
+            'mission_duration':'6 mois',
+            'id_alert' : self.alert.id,
+            'technos': [{'name': 'Django'}, {'name': 'React Native'}],
+        }
+        res = self.client.post(JOB_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        jobs = Job.objects.filter(id_alert=self.alert.id)
+        self.assertEqual(jobs.count(), 1)
+        job = jobs[0]
+        self.assertEqual(job.technos.count(), 2)
+        self.assertIn(techno_django, job.technos.all())
+        for techno in payload['technos']:
+            exists = job.technos.filter(
+                name=techno['name'],
+            ).exists()
+            self.assertTrue(exists)
+
+        # check the value is unique, No duplicate
+        techno_unique = Techno.objects.all().filter(name='Django')
+        self.assertEqual(techno_unique.count(), 1)
 
 

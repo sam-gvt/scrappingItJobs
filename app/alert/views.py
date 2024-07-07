@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from core.models import Alert, Job
-from .serializers import AlertSerializer, JobSerializer
+from core.models import Alert, Job, Techno
+from .serializers import AlertSerializer, JobSerializer, TechnoSerializer
 
 """
 _NOTE POUR MOI
@@ -24,6 +24,10 @@ class AlertViewSet(viewsets.ModelViewSet):
             id_user=self.request.user
         ).order_by('-id').distinct()
 
+
+    def perform_create(self, serializer):
+        serializer.save(id_user=self.request.user)
+
 class JobViewSet(viewsets.ModelViewSet):
     serializer_class = JobSerializer
     queryset = Job.objects.all()
@@ -33,3 +37,11 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Job.objects.filter(id_alert__id_user=self.request.user).order_by('-id')
 
+class TechnoViewSet(viewsets.ModelViewSet):
+    serializer_class = TechnoSerializer
+    queryset = Techno.objects.all()
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Techno.objects.order_by('-name')

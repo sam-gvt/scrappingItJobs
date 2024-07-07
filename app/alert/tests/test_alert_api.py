@@ -72,7 +72,7 @@ class PrivateAlertAPITests(TestCase):
         alert = Alert.objects.get(id=res.data['id'])
         self.assertEqual(res.data['title'], alert.title)
 
-    def test_create_alert_with_other_id_user_returns_error(self):
+    def test_create_alert_with_other_id_user_does_not_work(self):
 
         user2 = get_user_model().objects.create_user(username='user2', password='testpas1234!%')
         self.client.force_authenticate(user=user2)
@@ -82,8 +82,8 @@ class PrivateAlertAPITests(TestCase):
             'id_user': self.user.id
         }
         res = self.client.post(ALERT_URL, payload)
-
-        print(res)
+        self.assertEqual(res.data['id_user'], user2.id)
+        self.assertFalse(Alert.objects.filter(id_user=self.user.id).exists())
 
     def test_delete_alert(self):
 
@@ -95,11 +95,40 @@ class PrivateAlertAPITests(TestCase):
         self.assertFalse(Alert.objects.filter(id=alert.id).exists())
 
 
-    def test_update_iduser_returns_error(self):
-        pass
+    def test_update_alert(self):
+        alert = create_alert(user=self.user)
 
-    def test_update_alert_error(self):
-        pass
+        payload = {
+            'title':'Update Title',
+        }
+        url = reverse('alert:alert-detail', args=[alert.id])
+
+        res = self.client.put(url, payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        alert.refresh_from_db()
+
+        for key, value in payload.items():
+            self.assertEqual(getattr(alert,key), value)
+
+
+    def test_update_iduser_does_not_work(self):
+        # user 1 tries to update his id_user alert with the id_user of user 2
+        alert = create_alert(user=self.user)
+        user2 = get_user_model().objects.create_user(username='user2',password='testpass223!')
+
+        payload = {
+            'title':'Update Title',
+            'id_user': user2.id
+        }
+        url = reverse('alert:alert-detail', args=[alert.id])
+
+        res = self.client.put(url, payload)
+
+        alert.refresh_from_db()
+        # user 1 has modified his own alert
+        self.assertEqual(res.data['id_user'], self.user.id)
+
 
 
 

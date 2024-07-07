@@ -33,6 +33,21 @@ services:
       - POSTGRES_USER=devuser
       - POSTGRES_PASSWORD=password
 
+
+  scrapper:
+    build: .
+    volumes:
+      - .:/app
+    command: sh -c 'python /app/app/scrapping/script_scrapping.py'
+    environment:
+      - DB_HOST=db
+      - DB_NAME=devdb
+      - DB_USER=devuser
+      - DB_PASS=password
+    depends_on:
+      - db
+
+
 volumes:
   # vide, car docker compose le stockera dans le filesystem par defaut
   dev-db-data:
