@@ -16,14 +16,14 @@ class Alert(models.Model):
 
 class Job(models.Model):
     title = models.CharField(max_length=200)
-    tjm = models.IntegerField()
-    localization = models.CharField(max_length=200)
-    experience = models.CharField(max_length=200)
-    esn = models.CharField(max_length=200)
-    date = models.DateField()
-    mission_duration = models.CharField(max_length=200)
+    tjm = models.IntegerField(blank=True, null=True)
+    localization = models.CharField(max_length=200, blank=True, null=True)
+    experience = models.CharField(max_length=200, blank=True, null=True)
+    esn = models.CharField(max_length=200, blank=True, null=True)
+    date = models.DateField(blank=True, null=True)
+    mission_duration = models.CharField(max_length=200,blank=True, null=True)
     id_alert = models.ForeignKey(Alert, on_delete=models.CASCADE)
-    techno = models.ManyToManyField('Techno', related_name='jobs')
+    technos = models.ManyToManyField('Techno')
 
     def __str__(self):
         return self.title
