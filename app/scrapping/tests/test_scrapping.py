@@ -1,7 +1,6 @@
 
-from scrapping import script_scrapping
 from django.test import TestCase
-
+from dotenv import load_dotenv
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -13,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import time
 
-
+load_dotenv()
 class ScrappingBaseTest(TestCase):
 
     def setUp(self):
@@ -49,8 +48,8 @@ class ScrappingBaseTest(TestCase):
 
         email = self.driver.find_element(By.ID, "email")
         password = self.driver.find_element(By.ID, "password")
-        email.send_keys("sam.grandvincent.developer@gmail.com")
-        password.send_keys("Ps3123456!" + Keys.ENTER)
+        email.send_keys(os.getenv("EMAIL_FREEWORK"))
+        password.send_keys(os.getenv("PASSWORD_FREEWORK") + Keys.ENTER)
 
         time.sleep(5)
 
@@ -82,8 +81,8 @@ class ScrappingPrivateTest(TestCase):
 
         email = self.driver.find_element(By.ID, "email")
         password = self.driver.find_element(By.ID, "password")
-        email.send_keys("sam.grandvincent.developer@gmail.com")
-        password.send_keys("Ps3123456!" + Keys.ENTER)
+        email.send_keys(os.getenv("EMAIL_FREEWORK"))
+        password.send_keys(os.getenv("PASSWORD_FREEWORK") + Keys.ENTER)
 
         time.sleep(5)
 
@@ -118,7 +117,8 @@ class ScrappingPrivateTest(TestCase):
             print(tag.text)
 
     def test_get_tags_skills_for_2nd_job(self):
-        self.driver.get("https://www.free-work.com/fr/tech-it/jobs?query=Django&contracts=contractor&sort=date")
+        #self.driver.get("https://www.free-work.com/fr/tech-it/jobs?query=Django&contracts=contractor&sort=date")
+        self.driver.get("https://www.free-work.com/fr/tech-it/jobs?query=developpement%20web&contracts=contractor&freshness=less_than_24_hours")
         time.sleep(5)
         tags = self.driver.find_elements(By.XPATH, "(//div[@class='mb-4 relative rounded-lg max-full bg-white flex flex-col cursor-pointer shadow hover:shadow-md'])[2]//div[contains(@class, 'truncate') and contains(@class, 'py-[2px]')]")
         for tag in tags:
@@ -157,6 +157,37 @@ class ScrappingPrivateTest(TestCase):
 
         esn = self.driver.find_element(By.XPATH, "//header//p[@class='font-semibold text-sm']")
         print(esn.text)
+
+
+    def test_retrieve_svg_data_job(self):
+        self.driver.get("https://www.free-work.com/fr/tech-it/developpeur-python/job-mission/developpeur-python-django-h-f-49")
+        time.sleep(5)
+        div_element = self.driver.find_elements(By.XPATH, "//div[@class='flex items-center py-1']")
+        svg_element = div_element.find_elements(By.TAG_NAME, "path")
+        #print("Chemin du path du SVG:", svg_element.get_attribute("outerHTML"))
+
+        path_attribute = svg_element.get_attributes("d")
+        #print("Chemin du path du SVG:", path_attribute)
+
+    def test_retrieve_description_job(self):
+        self.driver.get("https://www.free-work.com/fr/tech-it/jobs?query=Django&contracts=contractor&sort=date")
+        time.sleep(5)
+        button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Voir cette offre')]"))
+        )
+        self.driver.execute_script("arguments[0].click();", button)
+        time.sleep(5)
+
+        #//div[@class='html-renderer prose-content']
+        parent_div = self.driver.find_element(By.XPATH, "//div[@class='shadow bg-white rounded-lg'][.//h2[contains(text(), 'Profil recherché')]]")
+        print("\n \n" + parent_div.get_attribute("outerHTML"))
+        description_div = parent_div.find_element(By.XPATH, ".//div[@class='html-renderer prose-content']")
+
+        print("\n \n" + description_div.get_attribute("outerHTML"))
+        print('\n \n \n description = ' + description_div.text)
+
+
+
 
 
 
