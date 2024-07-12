@@ -30,7 +30,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 django.setup()
 from django.contrib.auth import get_user_model
 
-from core.models import Alert
+from core.models import Alert,Job
 from alert.serializers import JobSerializer
 
 
@@ -49,41 +49,12 @@ def set_up_selenium():
 
 
 """
-un user creer une alert
-le script sera executer a minuit
-    il recupere chaque alert, il execute la fonction main_scrapping pour chaque alert
+a user creates an alert
+the script will be executed at midnight
+    it collects each alert, it executes the main_scrapping function for each alert
 
 """
 def script():
-    # user_details = {'username':'toqem__gvt', 'password':'testpass123!', 'first_name':'Sam'}
-    # user = get_user_model().objects.create_user(**user_details)
-    # Alert.objects.create(id_user=user, title="Django")
-    user = get_user_model().objects.get(username="sam__gvt")
-    alert = Alert.objects.get(id_user=user)
-    # alerts = Alert.objects.all()
-    # for alert in alerts:
-    #     title = alert.title
-    #     user_id = alert.id_user
-    #     print("title = "+str(title))
-    #     print("user_id = "+str(user_id))
-    #     main_scrapping(alert_title=title, user=user_id)
-
-    details_jobs = {
-        'tjm': '50k-55k €⁄an, 520 €⁄j',
-        'localization': 'Lyon, Auvergne-Rhône-Alpes',
-        'experience': '5 à 10 ans d’expérience',
-        'mission_duration': '1 an',
-        'contract_type': 'Télétravail partiel',
-        'esn': 'CELAD',
-        'title': "Offre d'emploi\nTech Lead – Python & Django (H/F)",
-        'date': '09/07/2024',
-        'technos': [{'name': 'Django'}, {'name': 'React Native'}],
-        'id_alert': alert.id
-    }
-    jobs = save_data(details_jobs=details_jobs)
-
-load_dotenv()
-def main_scrapping(alert_title='PHP', user=1, page='1', openai=False):
 
     global driver
 
@@ -92,12 +63,24 @@ def main_scrapping(alert_title='PHP', user=1, page='1', openai=False):
     driver.get("https://www.free-work.com/fr/tech-it")
     time.sleep(5)
 
-
     """LOGIN TO FREEWORK"""
     login()
     time.sleep(5)
 
+    alerts = Alert.objects.all()
+    for alert in alerts:
+        title = alert.title
+        user_id = alert.id_user
+        print("title = "+str(title))
+        main_scrapping(alert_title=title, id_alert=alert.id)
 
+    driver.quit()
+    return
+
+
+
+load_dotenv()
+def main_scrapping(alert_title, id_alert, page='1', openai=False):
 
     """ACCESS ALERT"""
     driver.get(f"https://www.free-work.com/fr/tech-it/jobs?query={alert_title}&contracts=contractor&freshness=less_than_24_hours&page={page}")
@@ -108,10 +91,8 @@ def main_scrapping(alert_title='PHP', user=1, page='1', openai=False):
     number_of_elements = total_jobs_to_analyse()
     print(f"Nombre d'éléments div présents : {number_of_elements}")
 
-
-    details_jobs = {}
     for job_number in range(1,number_of_elements+1):
-
+        print("Process for job number : "+str(job_number))
         """extract main skills"""
         main_skills = extract_main_skills(job_number)
 
@@ -128,11 +109,11 @@ def main_scrapping(alert_title='PHP', user=1, page='1', openai=False):
         else:
             details_jobs['technos'] = main_skills
 
-        print("\n \n \n details jobs = "+ str(details_jobs))
+        """add id_alert """
+        details_jobs['id_alert'] = id_alert
 
         """Save the data"""
-        save_data(details_jobs)
-
+        res = save_data(details_jobs)
         return
 
         # exit detail_job_page
@@ -140,8 +121,7 @@ def main_scrapping(alert_title='PHP', user=1, page='1', openai=False):
         time.sleep(5)
 
 
-    driver.quit()
-    return details_jobs
+
 
 
 
@@ -188,6 +168,7 @@ def extract_main_skills(job_number):
     main_skills = []
     for skill in tags_skills:
         main_skills.append({'name':skill.text})
+    print(str(main_skills))
     return main_skills
 
 
@@ -264,16 +245,10 @@ def get_technos_with_openai():
 def  save_data(details_jobs):
     serializer = JobSerializer(data=details_jobs)
 
-    # Valider les données
     if serializer.is_valid():
-        # Enregistrer les données validées dans la base de données
         job_instance = serializer.save()
-
-        # Optionnel : Récupérer l'instance de Job créée
-        print(f'Job instance created with id: {job_instance.id}')
         return job_instance
     else:
-        # Si les données ne sont pas valides, gérer les erreurs
         print(serializer.errors)
 
 
