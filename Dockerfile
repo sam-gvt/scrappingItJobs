@@ -7,6 +7,7 @@ ENV PYTHONUNBUFFERED 1
 
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
+COPY ./scripts /scripts
 COPY ./app /app
 WORKDIR /app
 EXPOSE 8000
@@ -14,10 +15,9 @@ EXPOSE 8000
 ARG DEV=false
 RUN python -m venv /py && \
 	/py/bin/pip install --upgrade pip && \
-	# on a besoin de ces paquets avant d'installer psycopg2
 	apk add --update --no-cache postgresql-client && \
 	apk add --update --no-cache --virtual .tmp-build-deps \
-		build-base postgresql-dev musl-dev && \
+		build-base postgresql-dev musl-dev linux-headers && \
 	apk add bash chromium chromium-chromedriver && \
 	/py/bin/pip install -r /tmp/requirements.txt && \
 	if [ $DEV = "true" ]; \
@@ -28,14 +28,13 @@ RUN python -m venv /py && \
 	adduser \
 		--disabled-password \
 		--no-create-home \
-		sam-user
+		sam-user && \
+	chmod -R +x /scripts
 
 ENV PATH="/scripts:/py/bin:$PATH"
 
 USER sam-user
 
-
-# reussir a executer le script main.py
-# apprendre et implementer celery pour le rendre asynchrone
+CMD ["run.sh"]
 
 

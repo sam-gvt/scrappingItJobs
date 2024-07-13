@@ -46,14 +46,21 @@ def set_up_selenium():
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
+"""
+CAUTION :
+    title alert can not be like "web developer",
+    It has to be like : "web%20developer"
 
+    No logs
+"""
 
 """
-a user creates an alert
-the script will be executed at midnight
-    it collects each alert, it executes the main_scrapping function for each alert
-
+HOW WORKS THE SCRIPT ?
+    a user creates an alert
+    the script will be executed at midnight
+        it collects each alert, it executes the main_scrapping function for each alert
 """
+
 def script():
 
     global driver
