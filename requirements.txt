@@ -6,3 +6,4 @@ drf-spectacular>=0.27.2,<0.28
 selenium>=4.21.0,<4.22
 python-dotenv
 openai==1.35.9
+uwsgi>=2.0.26,<2.1

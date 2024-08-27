@@ -1,7 +1,7 @@
 
 
 from rest_framework import serializers
-
+from datetime import datetime
 from core.models import Alert, Job, Techno
 
 class AlertSerializer(serializers.ModelSerializer):
@@ -20,10 +20,13 @@ class TechnoSerializer(serializers.ModelSerializer):
         fields = ['id','name']
         read_only_fields = ['id']
 
+
 class JobSerializer(serializers.ModelSerializer):
 
     # many = True because list of objects, not a single object
     technos = TechnoSerializer(many=True, required=False)
+    date = serializers.DateField(write_only=True, input_formats=['%d/%m/%Y'])
+
     class Meta:
         model = Job
         fields = [
